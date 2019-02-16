@@ -1,0 +1,12 @@
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/obj/Release/LoadingScreen.csprojAssemblyReference.cache
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/obj/Release/LoadingScreen.csproj.CoreCompileInputs.cache
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/bin/Release/Assembly-CSharp.dll
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/bin/Release/Smod2.dll
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/bin/Release/UnityEngine.CoreModule.dll
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/bin/Release/UnityEngine.dll
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/bin/Release/UnityEngine.Networking.dll
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/obj/Release/LoadingScreen.csproj.CopyComplete
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/bin/Release/LoadingScreen.dll
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/bin/Release/LoadingScreen.pdb
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/obj/Release/LoadingScreen.dll
+/mnt/DATA/Programming/RaiderProjects/SCPSL_LoadingScreen/LoadingScreen/obj/Release/LoadingScreen.pdb
