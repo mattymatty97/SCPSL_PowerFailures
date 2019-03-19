@@ -16,7 +16,7 @@ namespace PowerFailures
         SmodMajor = 3,
         SmodMinor = 2,
         SmodRevision = 0,
-        version = "0.0.1"
+        version = "0.0.3"
             )]
     public class PowerFailures : Plugin
     {

@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using Smod2.API;
 using Smod2.Commands;
 using Smod2.EventHandlers;
@@ -39,32 +40,35 @@ namespace PowerFailures.Properties
             {
                 duration = plugin.GetConfigInt("pf_zone_duration");
             }
-
-            Room[] rooms = null;
-            switch (args[0].ToUpper())
+            
+            new Thread(() =>
             {
-                case "HCZ":
+                Room[] rooms = null;
+                switch (args[0].ToUpper())
                 {
-                    rooms = plugin.Server.Map.Get079InteractionRooms(Scp079InteractionType.CAMERA)
-                        .Where(x => x.ZoneType == ZoneType.HCZ).ToArray();
+                    case "HCZ":
+                    {
+                        rooms = plugin.Server.Map.Get079InteractionRooms(Scp079InteractionType.CAMERA)
+                            .Where(x => x.ZoneType == ZoneType.HCZ).ToArray();
+                    }
+                        break;
+                    case "LCZ":
+                    {
+                        rooms = plugin.Server.Map.Get079InteractionRooms(Scp079InteractionType.CAMERA)
+                            .Where(x => x.ZoneType == ZoneType.LCZ).ToArray();
+                    }
+                        break;
                 }
-                 break;
-                case "LCZ":
-                {
-                    rooms = plugin.Server.Map.Get079InteractionRooms(Scp079InteractionType.CAMERA)
-                        .Where(x => x.ZoneType == ZoneType.LCZ).ToArray();
-                }
-                break;
-            }
 
-            if (rooms != null)
-            {
-                handler.addBlackoutRooms(rooms, duration);
-                foreach (var room in rooms)
+                if (rooms != null)
                 {
-                    room.FlickerLights();
+                    handler.addBlackoutRooms(rooms, duration);
+                    /*foreach (var room in rooms)
+                    {
+                        room.FlickerLights();
+                    }*/
                 }
-            }
+            }).Start();
 
             return new []{$"{args[0]} correctly blackout for {duration} seconds"};
         }
@@ -92,9 +96,9 @@ namespace PowerFailures.Properties
             
             if(room==null)
                 return new []{$"Unknown room {args[0]}"};
-            
+            /*
             room.FlickerLights();
-            
+            */
             handler.addBlackoutRooms(new[]{room},duration);
             
             return new []{$"{args[0]} correctly blackout for {duration} seconds"};;

@@ -16,7 +16,7 @@ namespace PowerFailures
 
         private DateTime time_blackout = DateTime.MaxValue;
         private DateTime time_zone_blackout = DateTime.MaxValue;
-        private DateTime tick2 = DateTime.MaxValue;
+        private DateTime lightCheck = DateTime.MaxValue;
         private Random rnd = new Random();
         private bool decont = false;
         private bool detonate = false;
@@ -29,17 +29,23 @@ namespace PowerFailures
 
         public void OnWaitingForPlayers(WaitingForPlayersEvent ev)
         {
+            time_blackout = DateTime.MaxValue;
+            time_zone_blackout = DateTime.MaxValue;
+            lightCheck = DateTime.MaxValue;
             decont = false;
             detonate = false;
             rooms = ev.Server.Map.Get079InteractionRooms(Scp079InteractionType.CAMERA).Where(x=>x.ZoneType == ZoneType.HCZ || x.ZoneType == ZoneType.LCZ).ToList();
-            blackouts.Clear();
+            lock (blackouts)
+            {
+                blackouts.Clear();
+            }
         }
 
         public void OnRoundStart(RoundStartEvent ev)
         {
             time_blackout = DateTime.Now.AddSeconds(rnd.Next(plugin.GetConfigInt("pf_min_time"),plugin.GetConfigInt("pf_max_time")));
             time_zone_blackout = DateTime.Now.AddSeconds(rnd.Next(plugin.GetConfigInt("pf_min_zone_time"),plugin.GetConfigInt("pf_max_zone_time")));
-            tick2 = DateTime.Now;
+            lightCheck = DateTime.Now;
             plugin.Debug($"Next room blakout at: {time_blackout.ToString()}");
             plugin.Debug($"Next zone blakout at: {time_zone_blackout.ToString()}");
         }
@@ -64,20 +70,20 @@ namespace PowerFailures
                 DateTime now = DateTime.Now;
                 if (now > time_blackout)
                 {
-                    new Task(RandomRoomBlackout).Start();
                     time_blackout = DateTime.MaxValue;
+                    new Thread(RandomRoomBlackout).Start();
                 }
 
                 if (now > time_zone_blackout)
                 {
-                    new Task(ZoneBlackout).Start();
                     time_zone_blackout = DateTime.MaxValue;
+                    new Thread(ZoneBlackout).Start();
                 }
 
-                if (tick2 < now)
+                if (now > lightCheck)
                 {
-                    new Task(OnUpdate).Start();
-                    tick2=DateTime.MaxValue;
+                    lightCheck = DateTime.MaxValue;
+                    new Task(KeepBlackout).Start();
                 }
             }
         }
@@ -98,11 +104,11 @@ namespace PowerFailures
 
             Room[] blackout = rooms.OrderBy(x=>rnd.Next(100)).Take(Math.Min(n_rooms,rooms.Count)).ToArray();
 
-            foreach (Room room in blackout)
+            /*foreach (Room room in blackout)
             {
                 room.FlickerLights();
                 
-            }
+            }*/
            
             addBlackoutRooms(blackout,plugin.GetConfigInt("pf_duration"));
 
@@ -131,11 +137,10 @@ namespace PowerFailures
 
             Room[] blackout = rooms.Where(x => x.ZoneType == zone).ToArray();
 
-           foreach (Room room in blackout)
+           /*foreach (Room room in blackout)
            {
                room.FlickerLights();
-           }
-           
+           }*/
             
            addBlackoutRooms(blackout,plugin.GetConfigInt("pf_zone_duration"));
 
@@ -143,36 +148,37 @@ namespace PowerFailures
             plugin.Debug($"Blacked out {zone.ToString()}");
             plugin.Debug($"Next zone blakout at: {time_zone_blackout.ToString()}");
         }
-        public void OnUpdate()
+        public void KeepBlackout()
         {
-                List<Room> to_remove = new List<Room>();
-                foreach (var pair in blackouts)
-                {
-                    if (pair.Value > DateTime.Now)
-                        pair.Key.FlickerLights();
-                    else
-                        to_remove.Add(pair.Key);
-                }
+            DateTime now = DateTime.Now;
 
-                foreach (var room in to_remove)
+            lock (blackouts)
+            {
+                blackouts = blackouts.Where(p => p.Value > now).Select(p =>
                 {
-                    blackouts.Remove(room);
-                }
-                tick2 = DateTime.Now.AddSeconds(3);
+                    p.Key.FlickerLights();
+                    return p;
+                }).ToDictionary(p=>p.Key,p=>p.Value);
+            }
+            
+            lightCheck = DateTime.Now.AddSeconds(8);
         }
 
         public void addBlackoutRooms(Room[] rooms, int duration)
         {
-            foreach (var room in rooms)
+            lock (blackouts)
             {
-                if (blackouts.ContainsKey(room))
+                foreach (var room in rooms)
                 {
-                    if (blackouts[room] < DateTime.Now.AddSeconds(duration))
-                        blackouts[room] = DateTime.Now.AddSeconds(duration);
-                }
-                else
-                {
-                    blackouts.Add(room,DateTime.Now.AddSeconds(duration));
+                    if (blackouts.ContainsKey(room))
+                    {
+                        if (blackouts[room] < DateTime.Now.AddSeconds(duration))
+                            blackouts[room] = DateTime.Now.AddSeconds(duration);
+                    }
+                    else
+                    {
+                        blackouts.Add(room,DateTime.Now.AddSeconds(duration));
+                    }
                 }
             }
         }
