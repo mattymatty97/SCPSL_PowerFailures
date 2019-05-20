@@ -10,7 +10,7 @@ using Smod2.Events;
 
 namespace PowerFailures
 {
-    public class EventHandlers :  IEventHandlerWaitingForPlayers, IEventHandlerRoundStart, IEventHandlerLCZDecontaminate, IEventHandlerFixedUpdate,IEventHandlerWarheadDetonate
+    public class EventHandlers :  IEventHandlerWaitingForPlayers, IEventHandlerRoundStart, IEventHandlerLCZDecontaminate, IEventHandlerFixedUpdate,IEventHandlerWarheadDetonate, IEventHandlerRoundEnd
     {
         private readonly PowerFailures plugin;
 
@@ -22,6 +22,7 @@ namespace PowerFailures
         private bool detonate = false;
         private List<Room> rooms;
         private Dictionary<Room,DateTime> blackouts = new Dictionary<Room, DateTime>();
+        private bool preround = true;
         public EventHandlers(PowerFailures plugin)
         {
             this.plugin = plugin;
@@ -34,6 +35,7 @@ namespace PowerFailures
             lightCheck = DateTime.MaxValue;
             decont = false;
             detonate = false;
+            preround = false;
             rooms = ev.Server.Map.Get079InteractionRooms(Scp079InteractionType.CAMERA).Where(x=>x.ZoneType == ZoneType.HCZ || x.ZoneType == ZoneType.LCZ).ToList();
             lock (blackouts)
             {
@@ -65,19 +67,19 @@ namespace PowerFailures
         
         public void OnFixedUpdate(FixedUpdateEvent ev)
         {
-            if (!detonate)
+            if (!detonate && !preround)
             {
                 DateTime now = DateTime.Now;
                 if (now > time_blackout)
                 {
                     time_blackout = DateTime.MaxValue;
-                    new Thread(RandomRoomBlackout).Start();
+                    new Task(RandomRoomBlackout).Start();
                 }
 
                 if (now > time_zone_blackout)
                 {
                     time_zone_blackout = DateTime.MaxValue;
-                    new Thread(ZoneBlackout).Start();
+                    new Task(ZoneBlackout).Start();
                 }
 
                 if (now > lightCheck)
@@ -166,8 +168,6 @@ namespace PowerFailures
 
         public void addBlackoutRooms(Room[] rooms, int duration)
         {
-            lock (blackouts)
-            {
                 foreach (var room in rooms)
                 {
                     if (blackouts.ContainsKey(room))
@@ -180,7 +180,11 @@ namespace PowerFailures
                         blackouts.Add(room,DateTime.Now.AddSeconds(duration));
                     }
                 }
-            }
+        }
+
+        public void OnRoundEnd(RoundEndEvent ev)
+        {
+            preround = true;
         }
     }
 }
